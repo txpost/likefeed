@@ -27,11 +27,11 @@ getTweet = function (cb) {
 	});
 }
 
-formatPost function (botData, cb) {
+formatPost = function (botData, cb) {
 	// body...
 }
 
-sendPost function (botData, cb) {
+sendPost = function (botData, cb) {
 	// body...
 }
 
