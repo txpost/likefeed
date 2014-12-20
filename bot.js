@@ -73,11 +73,11 @@ app.get('/db', function (request, response) {
 
 
 // run every two hours: 60000 * 60 * 2
-setInterval(function () {
-	try {
-		run();
-	}
-	catch (e) {
-		console.log(e);
-	}
-}, 60000 * .1);
+// setInterval(function () {
+// 	try {
+// 		run();
+// 	}
+// 	catch (e) {
+// 		console.log(e);
+// 	}
+// }, 60000 * .1);
