@@ -40,9 +40,11 @@ getTweet = function (botData, cb) {
 	});
 }
 
+
 formatPost = function (botData, cb) {
 	// body...
 }
+
 
 sendPost = function (botData, cb) {
 	// body...
@@ -68,7 +70,7 @@ run = function () {
 }
 
 
-run every two hours: 60000 * 60 * 2
+// run every two hours: 60000 * 60 * 2
 setInterval(function () {
 	try {
 		run();
