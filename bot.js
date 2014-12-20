@@ -13,11 +13,11 @@ var t = new Twit({
 getTweet = function (cb) {
 	t.get('favorites/list', {user_id: "trevpost", count: 1}, function (err, data, response) {
 		if (!err) {
-			console.log(data);
+			// console.log(data);
 			var botData = {
 				baseTweet: data[0].text,
 				tweetID: data[0].id_str,
-				tweetUsername: [0].user.screen_name
+				tweetUsername: data[0].user.screen_name
 			};
 			console.log("Tweet: " + botData.baseTweet);
 			// cb(null, botData);
