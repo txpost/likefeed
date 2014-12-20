@@ -11,14 +11,15 @@ var t = new Twit({
 });
 
 getTweet = function (cb) {
-	t.get('favorites/list', {user_id: "trevpost"}, function (err, data, response) {
+	t.get('favorites/list', {user_id: "trevpost", count: 1}, function (err, data, response) {
 		if (!err) {
+			console.log(data);
 			var botData = {
 				baseTweet: data.statuses[0].text,
 				tweetID: data.statuses[0].id_str,
 				tweetUsername: data.statuses[0].user.screen_name
 			};
-			console.log("Tweet: " + botData.baseTweet);
+			// console.log("Tweet: " + botData.baseTweet);
 			// cb(null, botData);
 		} else {
 			console.log("There was an error getting a public Tweet. ABORT!");
