@@ -15,11 +15,11 @@ getTweet = function (cb) {
 		if (!err) {
 			console.log(data);
 			var botData = {
-				baseTweet: data.statuses[0].text,
-				tweetID: data.statuses[0].id_str,
-				tweetUsername: data.statuses[0].user.screen_name
+				baseTweet: data[0].text,
+				tweetID: data[0].id_str,
+				tweetUsername: [0].user.screen_name
 			};
-			// console.log("Tweet: " + botData.baseTweet);
+			console.log("Tweet: " + botData.baseTweet);
 			// cb(null, botData);
 		} else {
 			console.log("There was an error getting a public Tweet. ABORT!");
