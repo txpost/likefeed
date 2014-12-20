@@ -1,0 +1,16 @@
+{
+  "name": "likefeed",
+  "version": "1.0.0",
+  "description": "Post favorites to Tumblr.",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "@trevpost",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^0.9.0",
+    "request": "^2.51.0",
+    "twit": "^1.1.18"
+  }
+}
