@@ -1,6 +1,7 @@
 var Twit = require('twit'),
 	async = require('async'),
-	request = require('request');
+	request = require('request'),
+	pg = require('pg');
 
 // authentication for the Twitter API
 var t = new Twit({
@@ -10,14 +11,27 @@ var t = new Twit({
 	access_token_secret: process.env.TWIT_ACCESS_TOKEN_SECRET
 });
 
+app.get('/db', function (request, response) {
+	pg.connect(process.env.DATABASE_URL, function  (err, client, done) {
+		client.query('SELECT * FROM test_table', function (err, result) {
+			done();
+			if (err) {
+				console.error(err); response.send("Error " + err);
+			} else {
+				response.send(result.rows);
+			};
+		})
+	})
+})
+
 getTweet = function (cb) {
-	t.get('favorites/list', {user_id: "trevpost", count: 1}, function (err, data, response) {
+	t.get('favorites/list', {user_id: "trevpost"}, function (err, data, response) {
 		if (!err) {
 			// console.log(data);
 			var botData = {
-				baseTweet: data[0].text,
-				tweetID: data[0].id_str,
-				tweetUsername: data[0].user.screen_name
+				baseTweet: data[5].text,
+				tweetID: data[5].id_str,
+				tweetUsername: data[5].user.screen_name
 			};
 			console.log("Tweet: " + botData.baseTweet);
 			// cb(null, botData);
@@ -63,4 +77,4 @@ setInterval(function () {
 	catch (e) {
 		console.log(e);
 	}
-}, 60000 * 1);
+}, 60000 * .1);
