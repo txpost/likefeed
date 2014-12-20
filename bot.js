@@ -1,7 +1,10 @@
 var Twit = require('twit'),
 	async = require('async'),
 	request = require('request'),
-	pg = require('pg');
+	pg = require('pg'),
+	express = require('express');
+
+var app = express();
 
 // authentication for the Twitter API
 var t = new Twit({
@@ -11,7 +14,7 @@ var t = new Twit({
 	access_token_secret: process.env.TWIT_ACCESS_TOKEN_SECRET
 });
 
-t.get('/db', function (request, response) {
+app.get('/db', function (request, response) {
 	pg.connect(process.env.DATABASE_URL, function  (err, client, done) {
 		client.query('SELECT * FROM test_table', function (err, result) {
 			done();
