@@ -25,7 +25,7 @@ var tumb = tumblr.createClient({
 
 // get the max id from fav_tweets db so we can then query using since_id
 getMaxID = function (cb) {
-	pg.connect(process.env.DATABASE_URL, function (err, client) {
+	pg.connect(process.env.DATABASE_URL, function (err, client, done) {
 		if (!err) {
 			
 			var query = client.query('SELECT max(id) FROM fav_tweets');
@@ -89,7 +89,7 @@ getTweets = function (botData, cb) {
 
 insertTweets = function (botData, cb) {
 
-	pg.connect(process.env.DATABASE_URL, function (err, client) {
+	pg.connect(process.env.DATABASE_URL, function (err, client, done) {
 		if (!err) {
 			if (botData.tweetBatch[0] != undefined) {
 
@@ -255,4 +255,4 @@ setInterval(function () {
 	catch (e) {
 		console.log(e);
 	}
-}, 60000 * 1);
+}, 60000 * .25);
