@@ -89,7 +89,7 @@ getTweets = function (botData, cb) {
 
 insertTweets = function (botData, cb) {
 
-	pg.connect(process.env.DATABASE_URL, function (err, client) {
+	pg.connect(process.env.DATABASE_URL, function (err, client, done) {
 		if (!err) {
 			if (botData.tweetBatch[0] != undefined) {
 
