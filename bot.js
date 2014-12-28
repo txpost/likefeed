@@ -40,7 +40,7 @@ getMaxID = function (cb) {
 
 				cb(null, botData);
 			});
-			done(client);
+			done();
 			// console.log("connected to db");
 		} else {
 			console.log("there was an error connecting to db, ABORT.");
@@ -89,7 +89,7 @@ getTweets = function (botData, cb) {
 
 insertTweets = function (botData, cb) {
 
-	pg.connect(process.env.DATABASE_URL, function (err, client, done) {
+	pg.connect(process.env.DATABASE_URL, function (err, client) {
 		if (!err) {
 			if (botData.tweetBatch[0] != undefined) {
 
@@ -152,7 +152,7 @@ insertTweets = function (botData, cb) {
 				console.log("botData.tweetBatch is empty, ABORT");
 				cb(null, botData);
 			}; 
-			done(client);
+			done();
 			
 			// console.log("connected to db");
 		} else {
@@ -255,4 +255,4 @@ setInterval(function () {
 	catch (e) {
 		console.log(e);
 	}
-}, 60000 * .25);
+}, 60000 * 1);
