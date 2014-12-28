@@ -40,7 +40,7 @@ getMaxID = function (cb) {
 
 				cb(null, botData);
 			});
-
+			done(client);
 			// console.log("connected to db");
 		} else {
 			console.log("there was an error connecting to db, ABORT.");
@@ -152,6 +152,7 @@ insertTweets = function (botData, cb) {
 				console.log("botData.tweetBatch is empty, ABORT");
 				cb(null, botData);
 			}; 
+			done(client);
 			
 			// console.log("connected to db");
 		} else {
