@@ -49,9 +49,11 @@ getMaxTweet = function (cb) {
 getTweets = function (botData, cb) {
     t.get('favorites/list', {screen_name: "trevpost", since_id: botData.maxID}, function (err, data, response) {
         if (!err) {
+
             // save all new tweet data in our global object
             botData.tweetBatch = data;
             cb(null, botData);
+
         } else {
             console.log("There was an error getting a public Tweet. ABORT!");
             cb(err, botData);
@@ -67,32 +69,13 @@ insertTweets = function (botData, cb) {
 
             // check to see if there is atleast one new favorite tweet
             if (botData.tweetBatch[0] != undefined) {
-                var queryText = "DELETE FROM fav_tweets WHERE id < (SELECT max(id) FROM fav_tweets);";
 
-                // delete all entries except for max id 
-                var query = client.query(queryText, function (err, result) {
-                    if (err) {
-                        console.log(err);
-                    };
-                });
-
-                // format each new tweet and insert the values into the db
+                // insert new tweet ids into the db
                 _.each(botData.tweetBatch, function (tweet, index) {
-                    var permalink = "http://twitter.com/" + tweet.user.screen_name + "/status/" + tweet.id_str;
                     
-                    var tweetDate = tweet.created_at;
-                    tweetDate = moment(tweetDate, 'dd MMM DD HH:mm:ss ZZ YYYY', 'en').format('YYYY-MM-DD');
-                    
-                    var tweetText = tweet.text; 
-                    tweetText = tweetText.replace(/[']/g, "");
-                    tweetText = tweetText.replace(/[^\x00-\x7F]/g, "");
-                    
-                    var tweetID = tweet.id_str;
-                    var tweetUsername = tweet.user.screen_name;
-                    var tweetPermalink = permalink;
-                    var tweetDate = tweetDate;
+                    var tweetID = parseInt(tweet.id_str);
 
-                    var queryText = "INSERT INTO fav_tweets (id, text, date, username, permalink) VALUES (" + tweetID + ",'" + tweetText + "','" + tweetDate + "','" + tweetUsername + "','" + tweetPermalink + "');";
+                    var queryText = "INSERT INTO fav_tweets VALUES (" + tweetID + ");";
 
                     var query = client.query(queryText, function (err, result) {
                         if (err) {
@@ -120,38 +103,30 @@ insertTweets = function (botData, cb) {
 // post new favorite tweets to tumblr
 postTweets = function (botData, cb) {
     if (botData.tweetBatch[0] != undefined) {
-        
-        // format each tweet for posting and post it
+
+        // post each tweet to tumblr
         _.each(botData.tweetBatch, function (tweet, index) {
-            var permalink = "http://twitter.com/" + tweet.user.screen_name + "/status/" + tweet.id_str;
-            var tweetDate = tweet.created_at;
-            tweetDate = moment(tweetDate, 'dd MMM DD HH:mm:ss ZZ YYYY', 'en').format('YYYY-MM-DD');
+            
             var tweetID = tweet.id_str;
-            var tweetUsername = tweet.user.screen_name;
-            var tweetPermalink = permalink;
-            var tweetDate = tweetDate;
-            var byLine = "<p>(<a href='" + tweetPermalink + "'>twitter</a>)</p>";
-            var tweetText = tweet.text; 
-            tweetText = tweetText.replace(/[']/g, "");
-            tweetText = tweetText.replace(/[^\x00-\x7F]/g, "");
 
-            // insert any image into the post
-            if (tweet.entities.media) {
-                var postText = tweetText + "</p><p><img src='" + tweet.entities.media[0].media_url + "' /> " + byLine;
-            } else {
-                var postText = tweetText + " " + byLine;
-            }
+            // get tweet embed code and post it to tumblr
+            t.get('statuses/oembed', {id: tweetID}, function (err, data, response) {
+                if (!err) {
 
-            // post to tumblr using the text format
-            tumb.text("likefeed", { body: postText }, function (err, res) {
-                if (err) {
-                    console.log("There was a problem posting to Tumblr, ABORT.");
+                    // get embed code
+                    botData.embed = data.html;
+
+                    // post to tumblr using the text format
+                    tumb.text("likefeed", { body: botData.embed }, function (err, res) {
+                        if (err) {
+                            console.log("There was a problem posting to Tumblr, ABORT.");
+                        };
+                    });
                 };
             });
-                        
+            
             if (index === botData.tweetBatch.length - 1) {
                 cb(null, botData);
-                console.log('new tweets posted to tumblr');
             }
         });
 
@@ -424,7 +399,7 @@ run = function () {
 }
 
 
-// run every twelve hours: 60000 * 60 * 12
+// run every 24 hours: 60000 * 60 * 24
 setInterval(function () {
     try {
         run();
