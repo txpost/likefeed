@@ -126,12 +126,13 @@ postTweets = function (botData, cb) {
             });
             
             if (index === botData.tweetBatch.length - 1) {
+                console.log("new tweets posted")
                 cb(null, botData);
             }
         });
 
     } else {
-        console.log("no new tweets to post to tumblr");
+        console.log("no new tweets to post");
         cb(null, botData);
     };
     
@@ -244,12 +245,12 @@ postVideos = function (botData, cb) {
             
             if (index === botData.newVideos.length - 1) {
                 cb(null, botData);
-                console.log('new videos posted to tumblr');
+                console.log('new youtube videos posted');
             }
         });
 
     } else {
-        console.log("there are no new videos to post");
+        console.log("no new youtube videos to post");
         cb(null, botData);
     };
 }
@@ -355,12 +356,141 @@ postSongs = function (botData, cb) {
             
             if (index === botData.newSongs.length - 1) {
                 cb(null, botData);
-                console.log('new songs posted');
+                console.log('new soundcloud songs posted');
             }
         });
 
     } else {
-        console.log("no new songs to post");
+        console.log("no new soundcloud songs to post");
+        cb(null, botData);
+    };
+}
+
+getRedditDb = function (botData, cb) {
+
+    pg.connect(process.env.DATABASE_URL, function (err, client, done) {
+        if (!err) {
+            var query = client.query('SELECT * FROM fav_reddits;', function (err, result) {
+                done();
+                if (!err) {
+                    botData.redditDb = [];
+                    
+                    // save previously added favorites to the object to be checked later
+                    _.each(result.rows, function (row, index) {
+                        botData.redditDb.push(row.created);
+                        if (index === result.rows.length - 1) {
+                            cb(null, botData);
+                        };
+                    });
+
+                } else {
+                    console.log("there was a problem with the fav_reddits query");
+                };
+            });
+        } else {
+            console.log("there was an error connecting to db, ABORT.");
+            console.log(err);
+        };
+    });
+}
+
+getReddit = function (botData, cb) {
+
+    var url = "http://www.reddit.com/user/txpost/saved.json?feed=" + process.env.REDDIT_FEED + "&user=txpost";
+
+    request(url, function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+            var json = JSON.parse(body);
+            botData.redditFavs = json;
+            cb(null, botData);
+        } else {
+            console.log(response.statusCode);
+            console.log("there was a problem with the reddit saved list" + error);
+            cb(error, botData);
+        };
+    })
+}
+
+selectReddit = function (botData, cb) {
+    var favUrl,
+        favTitle,
+        favDomain,
+        favCreated;
+
+    botData.newReddits = [];
+    
+    // check each song to see if it's new and insert it into our db if so
+    _.each(botData.redditFavs.data.children, function (fav, index) {
+        favUrl = fav.data.url;
+        favTitle = fav.data.title;
+        favDomain = fav.data.domain;
+        favCreated = fav.data.created;
+        favPermalink = fav.data.permalink;
+
+        // n = 12345;
+
+        // console.log(botData.redditDb.indexOf("" + n));
+
+        if (botData.redditDb.indexOf("" + favCreated) == -1) {
+
+            // save the video permalink so it can be posted to tumblr
+            botData.newReddits.push([favDomain, favUrl, favTitle, favPermalink]);
+
+            // insert the new id into our db so we know not to post it in the future
+            pg.connect(process.env.DATABASE_URL, function (err, client, done) {
+                if (!err) {
+                    var queryText = "INSERT INTO fav_reddits VALUES (" + favCreated + ");";
+                    var query = client.query(queryText, function (err, result) {
+                        if (err) {
+                            console.log(err);
+                        };
+                    });
+                    done();
+                } else {
+                    console.log("there was an error connecting to db, ABORT.");
+                    console.log(err);
+                };
+            });
+        };
+        if (index === botData.redditFavs.data.children.length - 1) {
+            cb(null, botData);
+        };
+    });
+}
+
+postReddit = function (botData, cb) {
+    var domain,
+        url,
+        title,
+        permalink,
+        text;
+
+    if (botData.newReddits[0] != undefined) {
+        
+        _.each(botData.newReddits, function (fav, index) {
+            domain = fav[0];
+            url = fav[1];
+            title = fav[2];
+            permalink = fav[3];
+
+            text = "<p>" + url + "</p><p><a href='http://reddit.com" + permalink + "'>- reddit</a></p>";
+            // console.log(text);
+
+            // post to tumblr using the text format
+            tumb.text("likefeed", { title: title, body: text }, function (err, res) {
+                if (err) {
+                    console.log("error ", err);
+                };
+            });
+            
+            if (index === botData.newReddits.length - 1) {
+                cb(null, botData);
+                console.log('new reddits posted');
+            }
+        });
+
+    } else {
+        console.log("no new reddits to post");
         cb(null, botData);
     };
 }
@@ -386,6 +516,10 @@ run = function () {
         getScList,
         selectSongs,
         postSongs,
+        getRedditDb,
+        getReddit,
+        selectReddit,
+        postReddit,
         endit
     ],
     function (err, botData) {
@@ -407,4 +541,4 @@ setInterval(function () {
     catch (e) {
         console.log(e);
     }
-}, 60000 * 60 * 24);
+}, 60000 * .1);
